@@ -1,0 +1,11 @@
+{
+	"name": "Framework Decision Calculator v5.0",
+	"short_name": "FDC v5.0",
+	"description": "Инструмент для расчета TCO и выбора фреймворков для FinTwin",
+	"theme_color": "#2563eb",
+	"background_color": "#ffffff",
+	"display": "standalone",
+	"orientation": "portrait",
+	"scope": "/fintwin-fdc-pages/",
+	"start_url": "/fintwin-fdc-pages/"
+}
