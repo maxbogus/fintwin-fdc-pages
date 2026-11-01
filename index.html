@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="ru">
+	<head>
+		<meta charset="UTF-8" />
+		<link rel="icon" type="image/svg+xml" href="/fintwin-fdc-pages/vite.svg" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta name="description" content="Framework Decision Calculator v5.0 для FinTwin" />
+		<title>FDC v5.0 - FinTwin</title>
+
+		<!-- Шрифты -->
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+			rel="stylesheet"
+		/>
+
+		<!-- PWA метатеги -->
+		<meta name="theme-color" content="#2563eb" />
+		<link rel="manifest" href="/fintwin-fdc-pages/manifest.json" />
+		<script type="module" crossorigin src="/fintwin-fdc-pages/assets/index-BHNLyS3Y.js"></script>
+		<link rel="modulepreload" crossorigin href="/fintwin-fdc-pages/assets/vendor-DHjfao1P.js">
+		<link rel="modulepreload" crossorigin href="/fintwin-fdc-pages/assets/forms-DNMZylhI.js">
+		<link rel="modulepreload" crossorigin href="/fintwin-fdc-pages/assets/charts-D_iNzXkN.js">
+		<link rel="stylesheet" crossorigin href="/fintwin-fdc-pages/assets/index-Dwn3q6LH.css">
+	</head>
+	<body>
+		<div id="root"></div>
+
+		<!--
+			Аварийное самолечение. Если бандл не загрузился (устаревший Service
+			Worker отдал старый index.html, а его assets/* отвечают 404), страница
+			сама снимает регистрацию SW, чистит кэши и перезагружается — один раз
+			за сессию. Скрипт классический (не module), поэтому исполняется даже
+			тогда, когда модульный бандл недоступен.
+		-->
+		<script>
+			(function () {
+				var RECOVERY_FLAG = 'fdc-sw-recovery';
+				var RECOVERY_DELAY_MS = 4000;
+
+				function isAppRendered() {
+					var root = document.getElementById('root');
+					return Boolean(root && root.childElementCount > 0);
+				}
+
+				function markRecoveryStarted() {
+					try {
+						if (window.sessionStorage.getItem(RECOVERY_FLAG) === '1') {
+							return false;
+						}
+						window.sessionStorage.setItem(RECOVERY_FLAG, '1');
+						return true;
+					} catch (error) {
+						// Приватный режим: без sessionStorage нет защиты от петли — не рискуем.
+						return false;
+					}
+				}
+
+				function clearServiceWorkerState() {
+					var tasks = [];
+
+					if ('serviceWorker' in navigator) {
+						tasks.push(
+							navigator.serviceWorker.getRegistrations().then(function (registrations) {
+								return Promise.all(
+									registrations.map(function (registration) {
+										return registration.unregister();
+									})
+								);
+							})
+						);
+					}
+
+					if ('caches' in window) {
+						tasks.push(
+							window.caches.keys().then(function (keys) {
+								return Promise.all(
+									keys.map(function (key) {
+										return window.caches.delete(key);
+									})
+								);
+							})
+						);
+					}
+
+					return Promise.all(tasks);
+				}
+
+				function recover() {
+					if (isAppRendered() || navigator.onLine === false) {
+						return;
+					}
+					if (!markRecoveryStarted()) {
+						return;
+					}
+					clearServiceWorkerState().then(
+						function () {
+							window.location.reload();
+						},
+						function () {
+							window.location.reload();
+						}
+					);
+				}
+
+				// Таймер стартует после load: при живой, но медленной загрузке
+				// приложение успеет отрисоваться и перезагрузки не будет.
+				window.addEventListener('load', function () {
+					window.setTimeout(recover, RECOVERY_DELAY_MS);
+				});
+			})();
+		</script>
+	</body>
+</html>
